@@ -28,10 +28,6 @@ public class PageInputFormat extends CombineFileInputFormat<Text, Text> {
 			index = 0;
 			
 			fs = FileSystem.get(job);
-			
-			
-			
-			
 		}
 		
 		private Path[] pagePaths;
@@ -77,10 +73,9 @@ public class PageInputFormat extends CombineFileInputFormat<Text, Text> {
 			InputStream input = fs.open(filePath);
 			byte[] data = new byte[input.available()];
 			input.read(data);
-			content.set(data);
 			input.close();
+			content.set(data);
 			
-			LOG.error(String.valueOf(index));
 			index++;
 			return true;
 		}
