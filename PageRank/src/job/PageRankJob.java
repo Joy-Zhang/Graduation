@@ -13,7 +13,7 @@ public class PageRankJob {
 
 	
 	public static void main(String[] args) throws IOException {
-		JobConf job = new JobConf();
+		JobConf job = new JobConf(PageRankJob.class);
 		job.setJobName("test");
 		job.setMapperClass(PageMapper.class);
 		job.setMapOutputKeyClass(Text.class);
