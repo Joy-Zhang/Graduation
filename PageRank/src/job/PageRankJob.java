@@ -1,15 +1,27 @@
 package job;
 
-import java.io.IOException;
+import java.io.*;
 
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
+
+import mapred.*;
+import io.*;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.mapred.*;
 
 public class PageRankJob {
 
 	
 	public static void main(String[] args) throws IOException {
 		JobConf job = new JobConf();
+		job.setJobName("test");
+		job.setMapperClass(PageMapper.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setInputFormat(PageInputFormat.class);
+		
+		
+		FileInputFormat.setInputPaths(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		
 		
 		

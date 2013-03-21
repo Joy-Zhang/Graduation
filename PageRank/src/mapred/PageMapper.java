@@ -1,16 +1,16 @@
 package mapred;
 
-import java.io.IOException;
-
+import java.io.*;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 
-public class PageMapper extends MapReduceBase implements Mapper<Text, Text, Text, Text> {
+public class PageMapper extends MapReduceBase implements Mapper<Path, Text, Text, Text> {
 
 	@Override
-	public void map(Text url, Text content, OutputCollector<Text, Text> output,
+	public void map(Path url, Text content, OutputCollector<Text, Text> output,
 			Reporter reporter) throws IOException {
-		
+		output.collect(new Text(url.getName()), content);
 	}
 
 }
