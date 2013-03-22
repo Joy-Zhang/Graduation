@@ -6,16 +6,19 @@ import java.util.regex.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 
-public class PageMapper extends MapReduceBase implements Mapper<Text, Text, Text, Text> {
+public class PageMapper extends MapReduceBase implements Mapper<LongWritable, Text, LongWritable, Text> {
 
 	@Override
-	public void map(Text url, Text content, OutputCollector<Text, Text> output,
+	public void map(LongWritable url, Text content, OutputCollector<LongWritable, Text> output,
 			Reporter reporter) throws IOException {
 				
-		Pattern link = Pattern.compile("<a *href=\"(.*)\"+", Pattern.MULTILINE);
+		Pattern link = Pattern.compile("<a *href=\"(.*?)\"", Pattern.MULTILINE);
 		Matcher linkMatcher = link.matcher(content.toString());
 		while(linkMatcher.find())
 			output.collect(url, new Text(linkMatcher.group(1)));
+		
+		
+		
 		
 		
 		
