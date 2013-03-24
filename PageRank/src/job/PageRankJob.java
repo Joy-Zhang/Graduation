@@ -39,6 +39,15 @@ public class PageRankJob {
         FileOutputFormat.setOutputPath(analyzePages, new Path(args[1]));
         JobClient.runJob(analyzePages);
         
+        
+        
+        
+        
+        fs.delete(new Path("/tmp/pages_index"), true);
+        
+        
+        
+        
 	}
 
 }

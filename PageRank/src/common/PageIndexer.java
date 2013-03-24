@@ -1,12 +1,13 @@
 package common;
 
 import java.io.*;
+
+import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapred.*;
 
 public class PageIndexer {
-	public PageIndexer(JobConf conf, Path path) throws IOException {
+	public PageIndexer(Configuration conf, Path path) throws IOException {
 		db = new BufferedReader(new InputStreamReader(FileSystem.get(conf).open(path)));
 		
 	}
