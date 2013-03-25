@@ -60,7 +60,7 @@ public class PageNumbererInputFormat extends CombineFileInputFormat<Text, LongWr
 		public boolean next(Text url, LongWritable number) throws IOException {
 			if(index >= pagePaths.length)
 				return false;
-			url.set(pagePaths[index].toString());
+			url.set(pagePaths[index].getName());
 			number.set(numberer.getValue());
 			numberer.increment(1);
 			

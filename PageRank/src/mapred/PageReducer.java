@@ -3,27 +3,65 @@ package mapred;
 import java.io.*;
 import java.util.*;
 
+import org.apache.hadoop.conf.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 
-public class PageReducer extends MapReduceBase implements
-		Reducer<Text, Text, Text, IntWritable> {
+import common.*;
 
+public class PageReducer extends MapReduceBase implements
+		Reducer<Text, Text, PageReducer.PagePair, DoubleWritable> {
+
+	public class PagePair {
+		private LongWritable src = new LongWritable();
+		private LongWritable dest = new LongWritable();
+		public PagePair(LongWritable src, LongWritable dest) {
+			super();
+			this.src = src;
+			this.dest = dest;
+		}
+		public LongWritable getSrc() {
+			return src;
+		}
+		public void setSrc(LongWritable src) {
+			this.src = src;
+		}
+		public LongWritable getDest() {
+			return dest;
+		}
+		public void setDest(LongWritable dest) {
+			this.dest = dest;
+		}
+		@Override
+		public String toString() {
+			
+			return src.toString() + "\t" + dest.toString();
+		}
+	}
+	
+	
 	@Override
 	public void reduce(Text src, Iterator<Text> dest,
-			OutputCollector<Text, IntWritable> output, Reporter reporter) throws IOException {
+			OutputCollector<PagePair, DoubleWritable> output, Reporter reporter) throws IOException {
+		PageIndexer indexer = new PageIndexer(new Configuration(), PageIndexer.DEFAULT_PATH);
 		
-		int links = 0;
+		LongWritable srcNumer = indexer.queryNumber(src);
+		double[] values = new double[indexer.getCount()];
 		
-
-		
-		while(dest.hasNext())
-		{
-			links++;
-			dest.next();
+		for(int i = 0; i < values.length; i++) 
+			values[i] = 0.0;
+		int count = 0;
+		while(dest.hasNext()) {
+			LongWritable destNumber = indexer.queryNumber(dest.next());
+			values[(int) destNumber.get()] = 1.0;
+			count++;
 		}
-		
-		output.collect(src, new IntWritable(links));
+		for(int i = 0; i < values.length; i++)
+		{	
+			output.collect(new PagePair(srcNumer, new LongWritable(i)),
+					new DoubleWritable(values[i] / count));
+		}
+		indexer.close();
 	}
 
 }

@@ -6,12 +6,12 @@ import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.lib.*;
-import common.*;
 
-public class PageInputFormat extends CombineFileInputFormat<LongWritable, Text> {
+
+public class PageInputFormat extends CombineFileInputFormat<Text, Text> {
 
 	@Override
-	public RecordReader<LongWritable, Text> getRecordReader(InputSplit split,
+	public RecordReader<Text, Text> getRecordReader(InputSplit split,
 			JobConf job, Reporter reporter) throws IOException {
 			
 		if(!(split instanceof CombineFileSplit))
@@ -22,29 +22,27 @@ public class PageInputFormat extends CombineFileInputFormat<LongWritable, Text> 
 		
 		return new  PageRecordReader(fileSplit, job, reporter);
 	}
-	private class PageRecordReader implements RecordReader<LongWritable, Text> {
+	private class PageRecordReader implements RecordReader<Text, Text> {
 
 		public PageRecordReader(CombineFileSplit split, JobConf job, Reporter reporter) throws IOException {
 			pagePaths = split.getPaths();
 			index = 0;
 
-			indexer = new PageIndexer(job, new Path("/tmp/pages_index"));
 			fs = FileSystem.get(job);
 		}
 		
 		private Path[] pagePaths;
 		private int index;
 		private FileSystem fs;
-		private PageIndexer indexer;
+
 		@Override
 		public void close() throws IOException {
-			indexer.close();
 			fs.close();
 		}
 
 		@Override
-		public LongWritable createKey() {
-			return new LongWritable();
+		public Text createKey() {
+			return new Text();
 		}
 
 		@Override
@@ -65,13 +63,13 @@ public class PageInputFormat extends CombineFileInputFormat<LongWritable, Text> 
 		}
 
 		@Override
-		public boolean next(LongWritable page, Text content) throws IOException {
+		public boolean next(Text page, Text content) throws IOException {
 			if(index >= pagePaths.length)
 				return false;
 			
 			Path filePath = pagePaths[index];
 			
-			page.set(indexer.queryNumber(new Text(filePath.toString())).get());
+			page.set(filePath.getName());
 			
 			InputStream input = fs.open(filePath);
 			byte[] data = new byte[input.available()];
