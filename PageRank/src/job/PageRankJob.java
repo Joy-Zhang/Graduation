@@ -22,20 +22,22 @@ public class PageRankJob {
 		
 		
 		numberPages.setJobName("number pages");
+        numberPages.setJar("PageRank.jar");
 		numberPages.setMapOutputKeyClass(Text.class);
 		numberPages.setMapOutputValueClass(LongWritable.class);
 		numberPages.setMapperClass(IdentityMapper.class);
 		numberPages.setInputFormat(PageNumbererInputFormat.class);
 		FileInputFormat.setInputPaths(numberPages, new Path(args[0]));
-        FileOutputFormat.setOutputPath(numberPages, new Path("/tmp/pages_number"));
-        JobClient.runJob(numberPages);
-		
+		FileOutputFormat.setOutputPath(numberPages, new Path("/tmp/pages_number"));
+        JobClient.runJob(numberPages).waitForCompletion();
+
         FileSystem fs = FileSystem.get(new Configuration());
         FileUtil.copyMerge(fs, new Path("/tmp/pages_number"), fs, PageIndexer.DEFAULT_PATH, true, numberPages, null);
         Path matrix = new Path("/tmp/matrix");
         
         
         JobConf analyzePages = new JobConf(PageRankJob.class);
+        analyzePages.setJar("PageRank.jar");
         analyzePages.setJobName("analyze pages");
         analyzePages.setMapperClass(PageMapper.class);
         analyzePages.setInputFormat(PageInputFormat.class);
@@ -43,29 +45,32 @@ public class PageRankJob {
         analyzePages.setMapOutputKeyClass(Text.class);
 		FileInputFormat.setInputPaths(analyzePages, new Path(args[0]));
         FileOutputFormat.setOutputPath(analyzePages, matrix);
-        JobClient.runJob(analyzePages);
+        analyzePages.setJarByClass(PageRankJob.class);
+        JobClient.runJob(analyzePages).waitForCompletion();
         
         
-        JobConf pageRank = new JobConf(PageRankJob.class);
-
-        pageRank.setJobName("page rank");
-        pageRank.setMapperClass(PageRankMapper.class);
-        pageRank.setReducerClass(PageRankReducer.class);
-        pageRank.setMapOutputKeyClass(LongWritable.class);
-        pageRank.setMapOutputValueClass(Text.class);
         
-        
-		FileInputFormat.setInputPaths(pageRank, matrix);
-        FileOutputFormat.setOutputPath(pageRank, new Path("/tmp/vector"));    
         Path pageRankVector = new Path("/tmp/page_rank");
-        PageRankVector vector = new PageRankVector(pageRank, pageRankVector);
+        PageRankVector vector = new PageRankVector(new Configuration(), pageRankVector);
         
         Path lastResult = new Path("/tmp/page_rank_new");
-        PageRankVector vectorNew = new PageRankVector(pageRank, lastResult);
+        PageRankVector vectorNew = new PageRankVector(new Configuration(), lastResult);
         vector.init();
+
         double deltaVectorNorm = 0.0;
         do {
-	        JobClient.runJob(pageRank);
+            JobConf pageRank = new JobConf(PageRankJob.class);
+            pageRank.setJar("PageRank.jar");
+            pageRank.setJobName("page rank");
+            pageRank.setMapperClass(PageRankMapper.class);
+            pageRank.setReducerClass(PageRankReducer.class);
+            pageRank.setMapOutputKeyClass(LongWritable.class);
+            pageRank.setMapOutputValueClass(Text.class);
+            
+            
+    		FileInputFormat.setInputPaths(pageRank, matrix);
+            FileOutputFormat.setOutputPath(pageRank, new Path("/tmp/vector"));    
+	        JobClient.runJob(pageRank).waitForCompletion();
 	        FileUtil.copyMerge(fs, new Path("/tmp/vector/"), fs, lastResult, true, pageRank, null);
 	        PageRankVector.PageRankVectorIterator vectorIterator = vector.iterator();
 	        PageRankVector.PageRankVectorIterator vectorIteratorNew = vectorNew.iterator();
