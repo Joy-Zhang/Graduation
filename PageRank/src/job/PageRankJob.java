@@ -89,6 +89,7 @@ public class PageRankJob {
 	    } while(deltaVectorNorm > 0.0001);
         fs.delete(matrix, true);
         fs.delete(PageIndexer.DEFAULT_PATH, true);
+        fs.rename(pageRankVector, new Path(args[1]));
         fs.close();
         
 
