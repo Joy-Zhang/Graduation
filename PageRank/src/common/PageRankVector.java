@@ -15,7 +15,7 @@ public class PageRankVector {
 	public PageRankVector(Configuration conf, Path path) throws IOException {
 		vectorFilePath = path;
 		fs = FileSystem.get(conf);
-				
+
 	}
 	
 	private Path vectorFilePath;
@@ -46,9 +46,9 @@ public class PageRankVector {
 	}
 	
 	public void close() throws IOException {
-		fs.close();
 		for(InputStream input : sessions) 
 			input.close();
+		fs.close();
 	}
 	
 	

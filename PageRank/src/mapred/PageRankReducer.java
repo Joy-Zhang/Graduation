@@ -1,16 +1,20 @@
 package mapred;
 
+import io.PageRankOutputFormat;
+
 import java.io.IOException;
 import java.util.Iterator;
 
 
 
 import org.apache.hadoop.conf.*;
-import org.apache.hadoop.fs.*;
+
+import org.apache.hadoop.hbase.client.*;
+
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapred.*;
 
-import common.*;
+
 
 public class PageRankReducer extends MapReduceBase implements
 		Reducer<LongWritable, Text, LongWritable, DoubleWritable> {
@@ -19,22 +23,24 @@ public class PageRankReducer extends MapReduceBase implements
 	public void reduce(LongWritable dest, Iterator<Text> weights,
 			OutputCollector<LongWritable, DoubleWritable> output, Reporter reporter)
 			throws IOException {
-		PageRankVector vector = new PageRankVector(new Configuration(), new Path("/tmp/page_rank"));
-		PageRankVector.PageRankVectorIterator iterator = vector.iterator();
+
+		HTable table = new HTable(new Configuration(), PageRankOutputFormat.TABLE_NAME);
+
 		double pageRank = 0.0;
-		while(iterator.hasNext() && weights.hasNext()) {
-			PageRankVector.PageRankPair pair = iterator.next();
+		while(weights.hasNext()) {
 			String[] parts = weights.next().toString().split("\t");
 			LongWritable srcPage = new LongWritable(Long.parseLong(parts[0]));
 			double weight = Double.parseDouble(parts[1]);
-		    FileInputFormat.LOG.error(new Boolean(pair.getPage().equals(srcPage)));
-		    
-		    
-		    pageRank += pair.getPageRank().get() * weight;		
+
+			Result result = table.get(new Get(String.valueOf(srcPage.get()).getBytes()));
+			double value = Double.parseDouble(new String(
+					result.getValue(PageRankOutputFormat.COLUMN_NAME.getBytes(), "old".getBytes())));
+		    pageRank += value * weight;		
 			
 		}
+		System.out.println("A pageRank");
 		output.collect(dest, new DoubleWritable(pageRank));
-		vector.close();
+
 	}
 
 }

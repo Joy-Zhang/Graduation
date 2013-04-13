@@ -5,6 +5,8 @@ import java.io.*;
 
 import mapred.*;
 import io.*;
+
+
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
@@ -33,9 +35,10 @@ public class PageRankJob {
 
         FileSystem fs = FileSystem.get(new Configuration());
         FileUtil.copyMerge(fs, new Path("/tmp/pages_number"), fs, PageIndexer.DEFAULT_PATH, true, numberPages, null);
+
+        FileInputFormat.LOG.error("Generated pages number");
+        
         Path matrix = new Path("/tmp/matrix");
-        
-        
         JobConf analyzePages = new JobConf(PageRankJob.class);
         analyzePages.setJar("PageRank.jar");
         analyzePages.setJobName("analyze pages");
@@ -48,17 +51,13 @@ public class PageRankJob {
         analyzePages.setJarByClass(PageRankJob.class);
         JobClient.runJob(analyzePages).waitForCompletion();
         
+        FileInputFormat.LOG.error("Generated pages rel matrix");
         
         
-        Path pageRankVector = new Path("/tmp/page_rank");
-        PageRankVector vector = new PageRankVector(new Configuration(), pageRankVector);
-        
-        Path lastResult = new Path("/tmp/page_rank_new");
-        PageRankVector vectorNew = new PageRankVector(new Configuration(), lastResult);
-        vector.init();
 
         double deltaVectorNorm = 0.0;
         do {
+
             JobConf pageRank = new JobConf(PageRankJob.class);
             pageRank.setJar("PageRank.jar");
             pageRank.setJobName("page rank");
@@ -66,30 +65,29 @@ public class PageRankJob {
             pageRank.setReducerClass(PageRankReducer.class);
             pageRank.setMapOutputKeyClass(LongWritable.class);
             pageRank.setMapOutputValueClass(Text.class);
+
+            pageRank.setOutputFormat(PageRankOutputFormat.class);
             
             
     		FileInputFormat.setInputPaths(pageRank, matrix);
-            FileOutputFormat.setOutputPath(pageRank, new Path("/tmp/vector"));    
-	        JobClient.runJob(pageRank).waitForCompletion();
-	        FileUtil.copyMerge(fs, new Path("/tmp/vector/"), fs, lastResult, true, pageRank, null);
-	        PageRankVector.PageRankVectorIterator vectorIterator = vector.iterator();
-	        PageRankVector.PageRankVectorIterator vectorIteratorNew = vectorNew.iterator();
-	        deltaVectorNorm = 0.0;
-	        while(vectorIterator.hasNext() && vectorIteratorNew.hasNext()) {
-	        	PageRankVector.PageRankPair pair = vectorIterator.next();
-	        	PageRankVector.PageRankPair pairNew = vectorIteratorNew.next();
-	        	FileInputFormat.LOG.error(new Boolean(pair.getPage().equals(pairNew.getPage())));
-	        	
-	        	deltaVectorNorm += Math.pow((pair.getPageRank().get() - pairNew.getPageRank().get()), 2);
-	        }
-	        vector.close();
-	        vectorNew.close();
-	        fs.rename(lastResult, pageRankVector);
-	        FileInputFormat.LOG.error(new Double(deltaVectorNorm));
+
+    		
+    		
+    		
+    		JobClient.runJob(pageRank).waitForCompletion();
+	        
+	        
+
 	    } while(deltaVectorNorm > 0.0001);
+
+        
+
+
+        
+
         fs.delete(matrix, true);
         fs.delete(PageIndexer.DEFAULT_PATH, true);
-        fs.rename(pageRankVector, new Path(args[1]));
+
         fs.close();
         
 
