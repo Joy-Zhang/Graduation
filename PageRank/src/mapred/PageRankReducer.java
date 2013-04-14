@@ -35,11 +35,12 @@ public class PageRankReducer extends MapReduceBase implements
 			Result result = table.get(new Get(String.valueOf(srcPage.get()).getBytes()));
 			double value = Double.parseDouble(new String(
 					result.getValue(PageRankOutputFormat.COLUMN_NAME.getBytes(), "old".getBytes())));
-		    pageRank += value * weight;		
+		    pageRank += value * weight;
 			
 		}
 		System.out.println("A pageRank");
 		output.collect(dest, new DoubleWritable(pageRank));
+		table.close();
 
 	}
 

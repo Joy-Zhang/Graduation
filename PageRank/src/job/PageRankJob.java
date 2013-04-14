@@ -48,16 +48,20 @@ public class PageRankJob {
         analyzePages.setMapOutputKeyClass(Text.class);
 		FileInputFormat.setInputPaths(analyzePages, new Path(args[0]));
         FileOutputFormat.setOutputPath(analyzePages, matrix);
-        analyzePages.setJarByClass(PageRankJob.class);
+
         JobClient.runJob(analyzePages).waitForCompletion();
         
         FileInputFormat.LOG.error("Generated pages rel matrix");
         
         
 
+        PageRankOutputFormat.init();
+
         double deltaVectorNorm = 0.0;
         do {
 
+        
+        
             JobConf pageRank = new JobConf(PageRankJob.class);
             pageRank.setJar("PageRank.jar");
             pageRank.setJobName("page rank");
@@ -76,7 +80,7 @@ public class PageRankJob {
     		
     		JobClient.runJob(pageRank).waitForCompletion();
 	        
-	        
+    		deltaVectorNorm = PageRankOutputFormat.deltaVectorNorm();
 
 	    } while(deltaVectorNorm > 0.0001);
 
