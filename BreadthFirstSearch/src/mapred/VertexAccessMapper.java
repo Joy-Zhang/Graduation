@@ -1,19 +1,19 @@
 package mapred;
 
 import java.io.*;
+
 import common.*;
 
 
 import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapreduce.*;
 
-public class VertexAccessMapper extends MapReduceBase implements
-		Mapper<LongWritable, Text, IntWritable, Text> {
+
+public class VertexAccessMapper extends Mapper<LongWritable, Text, IntWritable, Text> {
 
 	@Override
-	public void map(LongWritable key, Text value,
-			OutputCollector<IntWritable, Text> output, Reporter reporter)
-			throws IOException {
+	protected void map(LongWritable key, Text value, Context context)
+			throws IOException, InterruptedException {
 		GraphIndexer indexer = new GraphIndexer();
 		int vertex = Integer.parseInt(value.toString().trim());
 		indexer.markupAccessed(vertex);
@@ -22,9 +22,11 @@ public class VertexAccessMapper extends MapReduceBase implements
 		for(int i : neighbourhood)
 		{
 			if(!indexer.isAccessed(i))
-				output.collect(new IntWritable(i), new Text(""));
+				context.write(new IntWritable(i), new Text(""));
 		}
 		indexer.close();
 	}
+
+
 
 }

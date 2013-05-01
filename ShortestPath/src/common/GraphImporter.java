@@ -6,12 +6,13 @@ import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.RegionSplitter;
 
 public class GraphImporter {
 	public static final String TABLE_NAME = "graph_sp";
 	public static final String COLUMN_NAME = "value";
-	public static final String CURRENT_WARSHALL = "warshall";
-	public static int importGraph(Path graph) throws IOException {
+
+	public static int importGraph(Path graph) throws Exception	 {
 		Configuration conf = HBaseConfiguration.create();
 		HBaseAdmin hbase = new HBaseAdmin(conf);
 		
@@ -19,10 +20,9 @@ public class GraphImporter {
 			hbase.disableTable(TABLE_NAME);
 			hbase.deleteTable(TABLE_NAME);			
 		}
-		HTableDescriptor tableDesc = new HTableDescriptor(TABLE_NAME.getBytes());;
-		tableDesc.addFamily(new HColumnDescriptor(COLUMN_NAME.getBytes()));
-		hbase.createTable(tableDesc);
-		hbase.close();
+
+		RegionSplitter.main(new String[]{"-c", "3", "-f", 
+				COLUMN_NAME, TABLE_NAME, "UniformSplit"});
 		
 		FileSystem fs = FileSystem.get(conf);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(graph)));
@@ -32,7 +32,7 @@ public class GraphImporter {
 		
 		int src = 0;
 		while (line != null) {
-			String[] values = line.split(" ");
+			String[] values = line.trim().split(" ");
 			int dest = 0;
 			for(String value : values) {
 				Put put = new Put(
@@ -49,10 +49,11 @@ public class GraphImporter {
 		reader.close();
 		
 		
-		
+
 		
 		table.flushCommits();
 		table.close();
+
 		
 		return src;
 
