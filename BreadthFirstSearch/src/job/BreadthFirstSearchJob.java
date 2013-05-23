@@ -39,8 +39,7 @@ public class BreadthFirstSearchJob {
 			job.setJarByClass(BreadthFirstSearchJob.class);
 			job.setMapperClass(VertexAccessMapper.class);
 			job.setReducerClass(VertexAccessReducer.class);
-
-			FileInputFormat.setMaxInputSplitSize(job, 100);
+			FileInputFormat.setMaxInputSplitSize(job, 1000);
 			
 
 

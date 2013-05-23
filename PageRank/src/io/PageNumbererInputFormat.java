@@ -9,6 +9,8 @@ import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.lib.*;
 
 public class PageNumbererInputFormat extends CombineFileInputFormat<Text, LongWritable> {
+	
+	
 
 	@Override
 	public RecordReader<Text, LongWritable> getRecordReader(InputSplit split,

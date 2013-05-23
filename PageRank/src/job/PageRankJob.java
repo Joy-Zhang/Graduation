@@ -23,13 +23,14 @@ public class PageRankJob {
 		JobConf numberPages = new JobConf(PageRankJob.class);
 		
 		
-		numberPages.setJobName("number pages");
+		numberPages.setJobName("PR-number pages");
         numberPages.setJar("PageRank.jar");
 		numberPages.setMapOutputKeyClass(Text.class);
 		numberPages.setMapOutputValueClass(LongWritable.class);
 		numberPages.setMapperClass(IdentityMapper.class);
 		numberPages.setInputFormat(PageNumbererInputFormat.class);
 		FileInputFormat.setInputPaths(numberPages, new Path(args[0]));
+		
 		FileOutputFormat.setOutputPath(numberPages, new Path("/tmp/pages_number"));
         JobClient.runJob(numberPages).waitForCompletion();
 
@@ -41,7 +42,7 @@ public class PageRankJob {
         Path matrix = new Path("/tmp/matrix");
         JobConf analyzePages = new JobConf(PageRankJob.class);
         analyzePages.setJar("PageRank.jar");
-        analyzePages.setJobName("analyze pages");
+        analyzePages.setJobName("PR-analyze pages");
         analyzePages.setMapperClass(PageMapper.class);
         analyzePages.setInputFormat(PageInputFormat.class);
         analyzePages.setReducerClass(PageReducer.class);
@@ -64,15 +65,13 @@ public class PageRankJob {
         
             JobConf pageRank = new JobConf(PageRankJob.class);
             pageRank.setJar("PageRank.jar");
-            pageRank.setJobName("page rank");
+            pageRank.setJobName("PR-page rank");
             pageRank.setMapperClass(PageRankMapper.class);
             pageRank.setReducerClass(PageRankReducer.class);
             pageRank.setMapOutputKeyClass(LongWritable.class);
             pageRank.setMapOutputValueClass(Text.class);
 
             pageRank.setOutputFormat(PageRankOutputFormat.class);
-            
-            
     		FileInputFormat.setInputPaths(pageRank, matrix);
 
     		

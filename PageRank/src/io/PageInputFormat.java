@@ -10,6 +10,8 @@ import org.apache.hadoop.mapred.lib.*;
 
 public class PageInputFormat extends CombineFileInputFormat<Text, Text> {
 
+	
+	
 	@Override
 	public RecordReader<Text, Text> getRecordReader(InputSplit split,
 			JobConf job, Reporter reporter) throws IOException {
